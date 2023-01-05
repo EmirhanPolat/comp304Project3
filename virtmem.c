@@ -12,11 +12,11 @@
 
 #define TLB_SIZE 16
 #define PAGES 1024
-#define PAGE_MASK /* TODO */
+#define PAGE_MASK 1047552 //1111111111 000...
 
 #define PAGE_SIZE 1024
 #define OFFSET_BITS 10
-#define OFFSET_MASK /* TODO */
+#define OFFSET_MASK 1023 //...000 1111111111 
 
 #define MEMORY_SIZE PAGES * PAGE_SIZE
 
@@ -51,11 +51,26 @@ int max(int a, int b)
 /* Returns the physical address from TLB or -1 if not present. */
 int search_tlb(unsigned char logical_page) {
     /* TODO */
+	int i;
+	for(i = 0; i < TLB_SIZE; i++){
+		if(tlb[i].logical == logical_page){
+			return tlb[i].physical;
+		}
+	}
+	return -1;
 }
 
 /* Adds the specified mapping to the TLB, replacing the oldest mapping (FIFO replacement). */
 void add_to_tlb(unsigned char logical, unsigned char physical) {
     /* TODO */
+	struct tlbentry temp;
+	temp.physical = physical;
+	temp.logical = logical;
+
+	tlbindex = tlbindex % TLB_SIZE;
+	
+	tlb[tlbindex] = temp;
+	tlbindex++;	
 }
 
 int main(int argc, const char *argv[])
@@ -95,8 +110,8 @@ int main(int argc, const char *argv[])
 
     /* TODO 
     / Calculate the page offset and logical page number from logical_address */
-    int offset =
-    int logical_page =
+    int offset = logical_address & OFFSET_MASK;
+    int logical_page = (logical_address & PAGE_MASK) >> OFFSET_BITS;
     ///////
     
     int physical_page = search_tlb(logical_page);
@@ -110,6 +125,12 @@ int main(int argc, const char *argv[])
       // Page fault
       if (physical_page == -1) {
           /* TODO */
+	    memcpy(&main_memory[free_page*PAGE_SIZE], logical_page*PAGE_SIZE+backing, PAGE_SIZE);
+	    physical_page = free_page;
+	    pagetable[logical_page] = physical_page;
+
+	    page_faults++;
+	    free_page++; 
       }
 
       add_to_tlb(logical_page, physical_page);
