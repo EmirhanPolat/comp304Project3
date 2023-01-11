@@ -136,7 +136,6 @@ int main(int argc, const char *argv[])
 	    for(int i = 0; i < PAGES; i++){
 	    	if(pagetable[i] == free_page){
 			pagetable[i] = -1;
-			break;
 		}
 	    } 
 	    physical_page = free_page;

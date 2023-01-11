@@ -1,0 +1,33 @@
+# comp304Project3
+For this project, we are expected to simulate the paging behavior of OS systems.
+---PART1---
+Since we divide each tlbentry by half and assigning logical and physical addresses to their fields,
+we first need to find the corresponding integers to mask the first and second half of the logical address
+I have found the corresponding bit sequence using the https://www.rapidtables.com/convert/number/decimal-to-binary.html
+
+Then I needed to implement search_tlb and add_to_tlb functions
+Search:
+For all the entries in TLB, check if any tlb entry is matching the logical_page if found return its physical, -1 otherwise
+Add:
+Create a new entry using tlbentry struct, set its fields with inputs to funcion, update tlb index using modulo TLB_SIZE,
+append new entry to tlb[tlbindex] (fifo used ->how?-> tlbindex++) 
+
+Main func:
+calculated offset and logical_page using bit manipulations and masks (found by trial and error)
+search for physical page in tlb if found tlb_hits++ else look for pagetable with logical address
+if not found use memcpy to copy the contents of Backingstore(mainMemo) with free_page count and backing for PageSize many bits (no cases for not found) 
+found -> set physical_page to free_page count
+	 set corresponding pagetable entry to the physical page
+	 update page_faults and free_page count 
+Lastly add it to tlb too
+Example output achieved.
+
+---PART2---
+For this part we know need to find a way to shrink our info so that paging is efficient to use, 
+I could only solve this for fifo replacement policy. 
+All the details are the same as the first part;
+Except that now we have new argv element (modified argc checker, cast policy (-p X) using atoi(X)) 
+If 0, after using memcpy 
+Check if the any pagetable entry mathes with the next unallocated physical page in main memory. 
+If yes set that pagetable entry to -1 (delete the entry from table) then break;
+Still could not achieve the desired result. 

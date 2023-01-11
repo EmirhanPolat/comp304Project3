@@ -12,11 +12,11 @@
 
 #define TLB_SIZE 16
 #define PAGES 1024
-#define PAGE_MASK 1047552 //bits->1111111111 000...
+#define PAGE_MASK 1047552 //1111111111 000...
 
 #define PAGE_SIZE 1024
 #define OFFSET_BITS 10
-#define OFFSET_MASK 1023 //bits->...000 1111111111 
+#define OFFSET_MASK 1023 //...000 1111111111 
 
 #define MEMORY_SIZE PAGES * PAGE_SIZE
 
@@ -63,32 +63,26 @@ int search_tlb(unsigned char logical_page) {
 /* Adds the specified mapping to the TLB, replacing the oldest mapping (FIFO replacement). */
 void add_to_tlb(unsigned char logical, unsigned char physical) {
     /* TODO */
-	struct tlbentry temp; //creating new tlb entry
-	temp.physical = physical; //setting its physical
-	temp.logical = logical; //setting its logical
+	struct tlbentry temp;
+	temp.physical = physical;
+	temp.logical = logical;
 
-	tlbindex = tlbindex % TLB_SIZE; //to keep the fifo replacement policy
+	tlbindex = tlbindex % TLB_SIZE;
 	
-	tlb[tlbindex] = temp; //setting tlb entry 
-	tlbindex++;	//i++ for next replacement
+	tlb[tlbindex] = temp;
+	tlbindex++;	
 }
 
 int main(int argc, const char *argv[])
 {
-  if (argc != 5) {
-    fprintf(stderr, "Usage ./virtmem backingstore input -p 0or1\n");
+  if (argc != 3) {
+    fprintf(stderr, "Usage ./virtmem backingstore input\n");
     exit(1);
   }
   
-  int repPolicy;
-  if(!strcmp(argv[3], "-p")){
-  	repPolicy = atoi(argv[4]);
-  }
-  printf("Page Replacement Policy is %d\n", repPolicy);
-
   const char *backing_filename = argv[1]; 
   int backing_fd = open(backing_filename, O_RDONLY);
-  backing = mmap(0, MEMORY_SIZE, PROT_READ, MAP_PRIVATE, backing_fd, 0); // mmap(0, mainMemorySize)
+  backing = mmap(0, MEMORY_SIZE, PROT_READ, MAP_PRIVATE, backing_fd, 0); 
   
   const char *input_filename = argv[2];
   FILE *input_fp = fopen(input_filename, "r");
@@ -126,35 +120,17 @@ int main(int argc, const char *argv[])
       tlb_hits++;
       // TLB miss
     } else {
-      physical_page = pagetable[logical_page]; //If TLB miss take physical page from pagetable with logic_addrs
-      // Page fault0
-      if (physical_page == -1) { //If not found in pagetable either go to mainmemory
+      physical_page = pagetable[logical_page];
+      
+      // Page fault
+      if (physical_page == -1) {
           /* TODO */
-	    if(repPolicy == 0){
-	    
-	    memcpy(&main_memory[free_page*PAGE_SIZE], (logical_page*PAGE_SIZE)+backing, PAGE_SIZE); //copy address from main memory using free_page counter logical page 
-	    for(int i = 0; i < PAGES; i++){
-	    	if(pagetable[i] == free_page){
-			pagetable[i] = -1;
-			break;
-		}
-	    } 
+	    memcpy(&main_memory[free_page*PAGE_SIZE], (logical_page*PAGE_SIZE)+backing, PAGE_SIZE);
 	    physical_page = free_page;
 	    pagetable[logical_page] = physical_page;
-	    page_faults++;
-	    free_page++; 
-	    
-	    } else if(repPolicy == 1){
-	    //LRU PART
-	    
-	    }else {
-	    memcpy(&main_memory[free_page*PAGE_SIZE], (logical_page*PAGE_SIZE)+backing, PAGE_SIZE); //copy address from main memory using free_page counter logical page 
-	    physical_page = free_page;
-	    pagetable[logical_page] = physical_page;
-	    page_faults++;
-	    free_page++; 
-	    }
 
+	    page_faults++;
+	    free_page++; 
       }
 
       add_to_tlb(logical_page, physical_page);
